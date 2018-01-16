@@ -1,0 +1,86 @@
+/*
+ * Copyright (c) 2015-2016, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+
+&int_codec {
+       qcom,model = "msm8952-snd-card-mtp";
+
+       qcom,cdc-us-euro-gpios;// = <&tlmm 63 0>;
+       qcom,msm-mbhc-hphl-swh = <1>;
+       qcom,msm-mbhc-gnd-swh = <1>;
+       qcom,msm-hs-micbias-type = "external";
+
+       qcom,hdmi-dba-codec-rx;
+
+    qcom,msm-ext-pa = "primary","quaternary";
+
+       qcom,msm-gpios =
+               "pri_i2s",
+               "quat_i2s";
+       qcom,pinctrl-names =
+               "all_off",
+               "pri_i2s_act",
+               "quat_i2s_act",
+               "pri_i2s_quat_i2s_act";
+       pinctrl-names =
+               "all_off",
+               "pri_i2s_act",
+               "quat_i2s_act",
+               "pri_i2s_quat_i2s_act";
+
+       pinctrl-0 = <&cdc_pdm_lines_sus
+                       &cdc_pdm_lines_2_sus &ext_cdc_tlmm_lines_sus>;
+       pinctrl-1 = <&cdc_pdm_lines_act
+                       &cdc_pdm_lines_2_act &ext_cdc_tlmm_lines_sus>;
+       pinctrl-2 = <&cdc_pdm_lines_sus
+                       &cdc_pdm_lines_2_sus &ext_cdc_tlmm_lines_act>;
+       pinctrl-3 = <&cdc_pdm_lines_act
+                       &cdc_pdm_lines_2_act &ext_cdc_tlmm_lines_act>;
+
+       asoc-codec = <&stub_codec>, <&pm8937_cajon_dig>, <&hdmi_dba>;
+       asoc-codec-names = "msm-stub-codec.1", "cajon_codec",
+                                               "msm-hdmi-dba-codec-rx";
+};
+
+&soc {
+i2c_6: i2c@7af6000 { /* BLSP2 QUP2 */
+               compatible = "qcom,i2c-msm-v2";
+               #address-cells = <1>;
+               #size-cells = <0>;
+               reg-names = "qup_phys_addr";
+               reg = <0x7af6000 0x600>;
+               interrupt-names = "qup_irq";
+               interrupts = <0 300 0>;
+               qcom,clk-freq-out = <400000>;
+               qcom,clk-freq-in  = <19200000>;
+               clock-names = "iface_clk", "core_clk";
+               clocks = <&clock_gcc clk_gcc_blsp2_ahb_clk>,
+                       <&clock_gcc clk_gcc_blsp2_qup2_i2c_apps_clk>;
+               pinctrl-names = "i2c_active", "i2c_sleep";
+               pinctrl-0 = <&i2c_6_active>;
+               pinctrl-1 = <&i2c_6_sleep>;
+               qcom,noise-rjct-scl = <0>;
+               qcom,noise-rjct-sda = <0>;
+               qcom,master-id = <84>;
+               dmas = <&dma_blsp2 6 64 0x20000020 0x20>,
+                       <&dma_blsp2 7 32 0x20000020 0x20>;
+               dma-names = "tx", "rx";
+       };
+};
+
+/ {
+aliases {
+               /* smdtty devices */
+               i2c6 = &i2c_6;
+       };
+};

@@ -1,0 +1,344 @@
+/*
+ * Copyright (c) 2015-2016, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+#include "ZC551KL-SR-msm8937-pinctrl.dtsi"
+#include "msm8937-camera-sensor-mtp.dtsi"
+
+&flash_led {
+	compatible = "qcom,qpnp-flash-led";
+	reg = <0xd300 0x100>;
+	qcom,follow-otst2-rb-disabled;
+};
+
+&wled {
+	qcom,cons-sync-write-delay-us = <1000>;
+};
+
+&soc {
+        hall_sensor {
+		compatible = "qcom,hall";
+		pinctrl-names = "hall_gpio_high","hall_gpio_low";
+		pinctrl-0 = <&gpio_hall_active>;
+		pinctrl-1 = <&gpio_hall_suspend>;
+		qcom,hall-gpio = <&tlmm 46 0x0>;
+	};
+
+	gpio_keys {
+		compatible = "gpio-keys";
+		input-name = "gpio-keys";
+		pinctrl-names = "tlmm_gpio_key_active","tlmm_gpio_key_suspend";
+		pinctrl-0 = <&gpio_key_active>;
+		pinctrl-1 = <&gpio_key_suspend>;
+		// ASUS_BSP: remove camera key gpio config +++
+		/*camera_focus {
+			label = "camera_focus";
+			gpios = <&tlmm 128 0x1>;
+			linux,input-type = <1>;
+			linux,code = <0x210>;
+			debounce-interval = <15>;
+		};
+
+		camera_snapshot {
+			label = "camera_snapshot";
+			gpios = <&tlmm 127 0x1>;
+			linux,input-type = <1>;
+			linux,code = <0x2fe>;
+			debounce-interval = <15>;
+		};*/
+		// ASUS_BSP: remove camera key gpio config ---
+		vol_up {
+			label = "volume_up";
+			gpios = <&tlmm 91 0x1>;
+			linux,input-type = <1>;
+			linux,code = <115>;
+			debounce-interval = <15>;
+		};
+	};
+
+	hbtp {
+		compatible = "qcom,hbtp-input";
+		vcc_dig-supply = <&pm8937_l5>;
+		qcom,dig-load = <15000>;
+		qcom,dig-vtg-min = <1800000>;
+		qcom,dig-vtg-max = <1800000>;
+	};
+};
+
+&blsp1_uart2 {
+	status = "ok";
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart_console_active>;
+};
+
+&pmi_haptic{
+	qcom,wave-play-rate-us = <4165>;
+	qcom,actuator-type = "lra";
+	qcom,lra-auto-res-mode="qwd";
+	qcom,lra-high-z="opt1";
+	qcom,lra-res-cal-period = <4>;
+	qcom,correct-lra-drive-freq;
+	qcom,misc-trim-error-rc19p2-clk-reg-present;
+};
+
+&spi_3 { /* BLSP1 QUP3 */
+	maxim_sti@0 {
+		status = "disabled";
+		compatible = "maxim,maxim_sti";
+		reg = <0>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <65 0>;
+		spi-max-frequency = <16000000>;
+		avdd-supply = <&pm8937_l10>;
+		dvdd-supply = <&pm8937_l5>;
+		/*maxim_sti,irq-gpio = <&tlmm 65 0x00>;
+		maxim_sti,reset-gpio = <&tlmm 64 0x00>;*/
+		maxim_sti,touch_fusion = "/vendor/bin/touch_fusion";
+		maxim_sti,config_file = "/etc/firmware/qtc800s.cfg";
+		maxim_sti,fw_name = "qtc800s.bin";
+		pinctrl-names = "pmx_ts_active","pmx_ts_suspend",
+			"pmx_ts_release";
+		pinctrl-0 = <&ts_int_active &ts_reset_active>;
+		pinctrl-1 = <&ts_int_suspend &ts_reset_suspend>;
+		pinctrl-2 = <&ts_release>;
+	};
+};
+
+&goodix_irq {
+	pins = "gpio124";
+};
+
+&goodix_reset {
+	pins = "gpio127";
+};
+
+&soc{
+	goodix_gf316m {
+		compatible = "goodix,fingerprint";
+		spi-max-frequency = <4800000>;
+		reg = <0>;
+		input-device-name = "gf316m";
+		interrupt-parent = <&tlmm>;
+		interrupts = <124 0>;
+		spi-qup-id = <5>;
+
+		vcc_spi-supply  = <&pm8937_l10>;
+		vdd_ana-supply  = <&pm8937_l10>;
+		//vdd_io-supply   = <&pm8994_l29>;
+
+		goodix,gpio_pwr = <&tlmm 0 0x00>; //ASUS_BSP Allen_Zhuang : add GPIO0 to control fingerprint supply +++
+
+		goodix,gpio_reset = <&tlmm 127 0x00>;
+		goodix,gpio_irq = <&tlmm 124 0x00>;
+
+		pinctrl-names = "goodix_irq_active";
+		pinctrl-0 = <&goodix_irq_active>;
+
+		clock-names = "iface_clk", "core_clk";
+		clocks = <&clock_gcc clk_gcc_blsp2_ahb_clk>,
+		<&clock_gcc clk_gcc_blsp2_qup1_spi_apps_clk>;
+
+//		pinctrl-names = "default";
+	};
+};
+
+&sdhc_1 {
+	/* device core power supply */
+	vdd-supply = <&pm8937_l8>;
+	qcom,vdd-voltage-level = <2900000 2900000>;
+	qcom,vdd-current-level = <200 570000>;
+
+	/* device communication power supply */
+	vdd-io-supply = <&pm8937_l5>;
+	qcom,vdd-io-always-on;
+	qcom,vdd-io-lpm-sup;
+	qcom,vdd-io-voltage-level = <1800000 1800000>;
+	qcom,vdd-io-current-level = <200 325000>;
+
+	pinctrl-names = "active", "sleep";
+	pinctrl-0 = <&sdc1_clk_on &sdc1_cmd_on &sdc1_data_on &sdc1_rclk_on>;
+	pinctrl-1 = <&sdc1_clk_off &sdc1_cmd_off &sdc1_data_off &sdc1_rclk_off>;
+
+	qcom,clk-rates = <400000 20000000 25000000 50000000 100000000 192000000
+								384000000>;
+	qcom,nonremovable;
+	qcom,bus-speed-mode = "HS400_1p8v", "HS200_1p8v", "DDR_1p8v";
+
+	status = "ok";
+};
+
+&sdhc_2 {
+	/* device core power supply */
+	vdd-supply = <&pm8937_l11>;
+	qcom,vdd-voltage-level = <2950000 2950000>;
+	qcom,vdd-current-level = <15000 800000>;
+
+	/* device communication power supply */
+	vdd-io-supply = <&pm8937_l12>;
+	qcom,vdd-io-voltage-level = <1800000 2950000>;
+	qcom,vdd-io-current-level = <200 22000>;
+
+	pinctrl-names = "active", "sleep";
+	pinctrl-0 = <&sdc2_clk_on &sdc2_cmd_on &sdc2_data_on &sdc2_cd_on>;
+	pinctrl-1 = <&sdc2_clk_off &sdc2_cmd_off &sdc2_data_off>;
+
+	#address-cells = <0>;
+	interrupt-parent = <&sdhc_2>;
+	interrupts = <0 1 2>;
+	#interrupt-cells = <1>;
+	interrupt-map-mask = <0xffffffff>;
+	interrupt-map = <0 &intc 0 125 0
+		1 &intc 0 221 0
+		2 &tlmm 67 0>;
+	interrupt-names = "hc_irq", "pwr_irq", "status_irq";
+	cd-gpios = <&tlmm 67 0x1>;
+
+	qcom,clk-rates = <400000 20000000 25000000 50000000 100000000
+								200000000>;
+	qcom,bus-speed-mode = "SDR12", "SDR25", "SDR50", "DDR50", "SDR104";
+
+	status = "ok";
+};
+
+&pm8937_gpios {
+	gpio@c400 {
+		qcom,mode = <0>;
+		qcom,output-type = <0>;
+		qcom,pull = <0>;
+		qcom,vin-sel = <2>;
+		qcom,out-strength = <3>;
+		qcom,src-sel = <0>;
+		qcom,master-en = <1>;
+		status = "disabled";
+	};
+};
+
+#include "msm8937-mdss-panels.dtsi"
+
+&mdss_mdp {
+	qcom,mdss-pref-prim-intf = "dsi";
+};
+
+/*&mdss_dsi {
+	hw-config = "single_dsi";
+};*/
+
+&dsi_otm1284a_720p_video{
+	qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
+};
+
+&dsi_tm5p5_nt35596_1080p_video{
+	qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
+};
+
+
+&dsi_auo5p5_nt35596_1080p_video{
+	qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
+};
+
+//ASUS_BSP Show_Wang ++ [Scorpio][Display][NA][Spec]Bring up CTC & TM panel for Scorpio SR
+&dsi_pj055ic_1080p_video{
+	qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
+};
+
+&dsi_tm_tl055vdxp55_1080p_video{
+	qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
+};
+//ASUS_BSP Show_Wang --- [Scorpio][Display][NA][Spec]Bring up CTC & TM panel for Scorpio SR
+
+&dsi_cpt5p5_otm1284a_720p_video{
+	qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
+};
+
+&dsi_ctc_jd9365_720p_video{
+	qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
+};
+
+&dsi_tm_ili9881_720p_video{
+	qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
+};
+
+//ASUS_BSP Show_Wang +++ [Scorpio][Display][NA][Spec]Bring up BOE panel for Scorpio
+&dsi_boe_ili9881_720p_video{
+	qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
+};
+//ASUS_BSP Show_Wang --- [Scorpio][Display][NA][Spec]Bring up BOE panel for Scorpio
+
+&mdss_dsi0 {
+	qcom,dsi-pref-prim-pan = <&dsi_truly_1080_vid>;
+	qcom,dsi-pref-prim-pan = <&dsi_otm1284a_720p_video>;
+	qcom,dsi-pref-prim-pan = <&dsi_tm5p5_nt35596_1080p_video>;
+	qcom,dsi-pref-prim-pan = <&dsi_auo5p5_nt35596_1080p_video>;
+//ASUS_BSP Show_Wang +++ [Scorpio][Display][NA][Spec]Bring up CTC & TM panel for Scorpio SR
+	qcom,dsi-pref-prim-pan = <&dsi_pj055ic_1080p_video>;
+	qcom,dsi-pref-prim-pan = <&dsi_tm_tl055vdxp55_1080p_video>;
+//ASUS_BSP Show_Wang --- [Scorpio][Display][NA][Spec]Bring up CTC & TM panel for Scorpio SR
+	qcom,dsi-pref-prim-pan = <&dsi_cpt5p5_otm1284a_720p_video>;
+//ASUS_BSP Yudong_Lin +++ bring up jd9365 ili9881 for gemini
+	qcom,dsi-pref-prim-pan = <&dsi_ctc_jd9365_720p_video>;
+	qcom,dsi-pref-prim-pan = <&dsi_tm_ili9881_720p_video>;
+//ASUS_BSP Yudong_Lin --- bring up jd9365 ili9881 for gemini
+//ASUS_BSP Show_Wang +++ [Scorpio][Display][NA][Spec]Bring up BOE panel for Scorpio
+	qcom,dsi-pref-prim-pan = <&dsi_boe_ili9881_720p_video>;
+//ASUS_BSP Show_Wang --- [Scorpio][Display][NA][Spec]Bring up BOE panel for Scorpio
+	pinctrl-names = "mdss_default", "mdss_sleep";
+	pinctrl-0 = <&mdss_dsi_active>;
+	pinctrl-1 = <&mdss_dsi_suspend>;
+
+	qcom,platform-reset-gpio = <&tlmm 60 0>;
+	/*qcom,platform-bklight-en-gpio = <&tlmm 25 0>;*/
+};
+
+/*
+&mdss_dsi1 {
+	status = "disabled";
+	qcom,dsi-pref-prim-pan = <&dsi_truly_1080_vid>;
+	pinctrl-names = "mdss_default", "mdss_sleep";
+	pinctrl-0 = <&mdss_dsi_active &mdss_te_active>;
+	pinctrl-1 = <&mdss_dsi_suspend &mdss_te_suspend>;
+
+	qcom,platform-te-gpio = <&tlmm 24 0>;
+	qcom,platform-enable-gpio = <&tlmm 99 0>;
+	qcom,platform-reset-gpio = <&tlmm 60 0>;
+	qcom,platform-bklight-en-gpio = <&tlmm 25 0>;
+};
+*/
+
+&dsi_truly_1080_vid {
+	qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
+	qcom,mdss-dsi-pan-enable-dynamic-fps;
+	qcom,mdss-dsi-pan-fps-update = "dfps_immediate_porch_mode_vfp";
+};
+
+
+&dsi_truly_1080_cmd {
+	qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
+	qcom,ulps-enabled;
+	qcom,partial-update-enabled;
+	qcom,panel-roi-alignment = <2 2 4 2 1080 2>;
+};
+
+&dsi_truly_720_vid {
+	qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
+	qcom,mdss-dsi-pan-enable-dynamic-fps;
+	qcom,mdss-dsi-pan-fps-update = "dfps_immediate_porch_mode_vfp";
+};
+
+/* PM8937 GPIO configuration */
+&pm8937_gpios {
+	gpio@c100 {
+		qcom,mode = <0>;
+		qcom,vin-sel = <3>;
+		//qcom,dtest-sel = <1>;
+		status = "okay";
+	};
+};

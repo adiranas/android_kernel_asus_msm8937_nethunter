@@ -1,0 +1,71 @@
+/*
+ * Copyright (c) 2015, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+/*quat i2s for external tfa speaker;asus_bsp++*/
+		ext-cdc-tlmm-lines {
+			ext_cdc_tlmm_lines_act: ext_cdc_tlmm_lines_act {
+				mux {
+					pins = "gpio12", "gpio13", "gpio94", "gpio95";
+					function = "sec_mi2s";
+				};
+
+				config {
+					pins = "gpio12", "gpio13", "gpio94", "gpio95";
+					drive-strength = <8>;
+				};
+			};
+			ext_cdc_tlmm_lines_sus: ext_cdc_tlmm_lines_sus {
+				mux {
+					pins = "gpio12", "gpio13", "gpio94", "gpio95";
+					function = "sec_mi2s";
+				};
+
+				config {
+					pins = "gpio12", "gpio13", "gpio94", "gpio95";
+					drive-strength = <2>;
+					bias-pull-down;
+				};
+			};
+      };
+/*quat i2s for external tfa speaker;asus_bsp++*/
+
+/*add for control external tfa speaker;asus_bsp++*/
+i2c_6 {
+                       i2c_6_active: i2c_6_active {
+                               /* active state */
+                               mux {
+                                       pins = "gpio22", "gpio23";
+                                       function = "blsp_i2c6";
+                               };
+
+                               config {
+                                       pins = "gpio22", "gpio23";
+                                       drive-strength = <2>;
+                                       bias-disable;
+                               };
+                       };
+
+                       i2c_6_sleep: i2c_6_sleep {
+                               /* suspended state */
+                               mux {
+                                       pins = "gpio22", "gpio23";
+                                       function = "gpio";
+                               };
+
+                               config {
+                                       pins = "gpio22", "gpio23";
+                                       drive-strength = <2>;
+                                       bias-disable;
+                               };
+                       };
+               };
+/*add for control external tfa speaker;asus_bsp--*/
